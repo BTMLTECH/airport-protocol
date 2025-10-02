@@ -25,15 +25,22 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Plane, Users, Calendar, Clock, MapPin, Tag } from "lucide-react";
+import axios from "axios";
 
 const formSchema = z.object({
-  fullName: z.string().min(2, "Full name must be at least 2 characters").max(100),
+  fullName: z
+    .string()
+    .min(2, "Full name must be at least 2 characters")
+    .max(100),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(8, "Please include country code").max(20),
   services: z.array(z.string()).min(1, "Please select at least one service"),
   flightDate: z.string().min(1, "Flight date is required"),
   flightTime: z.string().min(1, "Flight time is required"),
-  flightNumber: z.string().min(1, "Airline & flight number is required").max(50),
+  flightNumber: z
+    .string()
+    .min(1, "Airline & flight number is required")
+    .max(50),
   airportTerminal: z.string().optional(),
   passengers: z.string().min(1, "Number of passengers is required"),
   specialRequests: z.string().optional(),
@@ -84,19 +91,37 @@ export function BookingForm() {
   });
 
   const onSubmit = async (data: FormData) => {
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    console.log("Form submitted:", data);
-    
-    toast.success("Booking request submitted successfully!", {
-      description: "Our team will contact you shortly to confirm your booking.",
-    });
-    
-    form.reset();
-    setIsSubmitting(false);
+    try {
+      setIsSubmitting(true);
+
+      // ✅ Send data to backend
+      const response = await axios.post(
+        "http://localhost:5000/api/booking",
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Response:", response.data);
+
+      toast.success("Booking request submitted successfully!", {
+        description:
+          "Our team will contact you shortly to confirm your booking.",
+      });
+
+      form.reset();
+    } catch (error: any) {
+      console.error("Error submitting booking:", error);
+
+      toast.error("Failed to submit booking request", {
+        description: error.response?.data?.message || error.message,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -109,7 +134,7 @@ export function BookingForm() {
               <Users className="h-5 w-5 text-primary" />
               Personal Information
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -132,7 +157,11 @@ export function BookingForm() {
                   <FormItem>
                     <FormLabel>Email Address *</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="john@example.com" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="john@example.com"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -161,7 +190,7 @@ export function BookingForm() {
               <Plane className="h-5 w-5 text-primary" />
               Type of Service
             </h3>
-            
+
             <FormField
               control={form.control}
               name="services"
@@ -187,7 +216,10 @@ export function BookingForm() {
                                   checked={field.value?.includes(service.id)}
                                   onCheckedChange={(checked) => {
                                     return checked
-                                      ? field.onChange([...field.value, service.id])
+                                      ? field.onChange([
+                                          ...field.value,
+                                          service.id,
+                                        ])
                                       : field.onChange(
                                           field.value?.filter(
                                             (value) => value !== service.id
@@ -217,7 +249,7 @@ export function BookingForm() {
               <Calendar className="h-5 w-5 text-primary" />
               Flight Details
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -299,8 +331,10 @@ export function BookingForm() {
 
           {/* Additional Information Section */}
           <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-foreground">Additional Information</h3>
-            
+            <h3 className="text-xl font-semibold text-foreground">
+              Additional Information
+            </h3>
+
             <FormField
               control={form.control}
               name="specialRequests"
@@ -343,7 +377,10 @@ export function BookingForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>How did you hear about us?</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select an option" />
@@ -351,7 +388,10 @@ export function BookingForm() {
                       </FormControl>
                       <SelectContent>
                         {referralSources.map((source) => (
-                          <SelectItem key={source} value={source.toLowerCase().replace(/\s+/g, "-")}>
+                          <SelectItem
+                            key={source}
+                            value={source.toLowerCase().replace(/\s+/g, "-")}
+                          >
                             {source}
                           </SelectItem>
                         ))}
