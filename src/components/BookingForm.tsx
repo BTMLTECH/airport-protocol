@@ -96,7 +96,7 @@ export function BookingForm() {
 
       // ✅ Send data to backend
       const response = await axios.post(
-        "http://localhost:5000/api/booking",
+        "https://airport-server-onj2.onrender.com/api/booking",
         data,
         {
           headers: {
